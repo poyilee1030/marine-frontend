@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>marine-frontend 教材</title>
+<style>
+:root {
+  color-scheme: dark light;
+  --bg: #10141a; --bg-panel: #161c24; --fg: #dde5ec; --heading: #eef4fa; --muted: #93a1af;
+  --accent: #58a6ff; --accent-2: #79c0ff; --ok: #3fb950; --bad: #f85149;
+  --link: #58a6ff; --link-visited: #b0a3e8; --hairline: #2b3540; --code-bg: #171d25; --code-border: #2b3540;
+  --shell-bg: #0a0e12; --shell-fg: #c8d6e0; --shell-label: #58d68d;
+  --c-browser: #58a6ff; --c-node: #e3b341; --c-ext: #3fb950; --c-you: #bc8cff;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f8fa; --bg-panel: #ffffff; --fg: #1f2933; --heading: #0d1117; --muted: #57606a;
+    --accent: #0969da; --accent-2: #0550ae; --ok: #1a7f37; --bad: #cf222e;
+    --link: #0969da; --link-visited: #6e40c9; --hairline: #d0d7de; --code-bg: #f3f5f7; --code-border: #d0d7de;
+    --shell-bg: #1f2328; --shell-fg: #d6dee6; --shell-label: #7ee2a8;
+    --c-browser: #0969da; --c-node: #9a6700; --c-ext: #1a7f37; --c-you: #8250df;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 1.0625rem; line-height: 1.95;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 1.25rem 4rem; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+header.hero { margin: 2.5rem 0 2rem; padding: 1.6rem 1.8rem; border-radius: 10px; background: var(--bg-panel); border: 1px solid var(--hairline); border-left: 4px solid var(--accent); }
+header.hero h1 { margin: 0 0 0.8rem; font-size: 1.9rem; line-height: 1.4; color: var(--heading); }
+header.hero p { margin: 0; color: var(--muted); }
+h2 { margin: 2.6rem 0 1rem; padding: 0.15rem 0 0.45rem 0.85rem; font-size: 1.35rem; color: var(--heading); border-left: 4px solid var(--accent); border-bottom: 1px solid var(--hairline); }
+p { margin: 0 0 1.1rem; }
+ul { margin: 0 0 1.1rem; padding-left: 1.6rem; }
+li { margin-bottom: 0.35rem; }
+b { color: var(--heading); }
+code, pre { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace; }
+code { background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 4px; padding: 0.08em 0.35em; font-size: 0.86em; color: var(--accent-2); }
+pre { border-radius: 8px; padding: 0.9rem 1.1rem; margin: 0 0 1.2rem; overflow-x: auto; line-height: 1.6; font-size: 0.85rem; }
+pre.shell { background: var(--shell-bg); color: var(--shell-fg); border: 1px solid var(--hairline); }
+pre.shell::before { display: block; margin-bottom: 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; color: var(--shell-label); content: "▶ 貼上執行 · 在 repo 根目錄"; }
+pre.shell[data-where]::before { content: "▶ 貼上執行 · " attr(data-where); }
+pre.plain { background: var(--code-bg); border: 1px solid var(--code-border); }
+.legend { display: flex; flex-wrap: wrap; gap: 0.4rem 1.4rem; margin: 0 0 1.2rem; }
+.legend i { display: inline-block; width: 0.9em; height: 0.9em; border-radius: 3px; vertical-align: -0.08em; margin-right: 0.45em; }
+ol.toc { list-style: none; padding: 0; margin: 0; }
+ol.toc > li { border: 1px solid var(--hairline); border-radius: 10px; background: var(--bg-panel); padding: 0.9rem 1.2rem; margin: 0 0 0.8rem; }
+ol.toc .num { display: inline-block; min-width: 4.2rem; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); }
+ol.toc .title { font-weight: 650; font-size: 1.05rem; }
+ol.toc .desc { color: var(--muted); font-size: 0.92rem; margin: 0.2rem 0 0; }
+ol.toc li.todo { opacity: 0.6; border-style: dashed; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <h1>marine-frontend 教材：從零看懂一個極簡前端</h1>
+  <p>一個給 drone 容器開發者「功能做完後手動測試」用的網頁：一張地圖、每台 drone 一個點、起飛和降落兩顆按鈕。
+  這本教材跟著開發一起長，<b>每個 step（每個 PR）一章</b>，由寫那段程式的同一個人（session）撰寫，
+  所以章裡的輸出、數字、踩到的坑都是實際跑出來的。</p>
+</header>
+
+<h2>這是給誰看的</h2>
+<ul>
+  <li><b>熟 drone、熟 Python 後端，但完全不懂前端</b>的人。不假設你知道 npm、TypeScript、瀏覽器怎麼載入程式。</li>
+  <li>會用終端機、會 <code>git clone</code>、看得懂簡單的 bash。</li>
+</ul>
+
+<h2>整個系統長什麼樣</h2>
+<p>這個專案只是最前面那一層。瀏覽器裡的網頁透過後端 <code>marine-backend-py</code>（FastAPI）去問 drone，drone 再去跟模擬器 SITL 講話：</p>
+<pre class="plain">瀏覽器 ── marine-frontend（Vite dev server :5173）   ← 本教材
+            │ /api/* 由 Vite 轉給
+            ▼
+         marine-backend-py :8100  ──►  drone-N :7070  ──►  SITL（模擬的飛控）</pre>
+<p>計畫、選型理由、每一步的驗收標準在 repo 根目錄的 <code>ROADMAP.md</code>；每一步量到的數字在 <code>docs/baseline.md</code>。</p>
+
+<h2>怎麼讀</h2>
+<ul>
+  <li><b>照順序讀。</b>每章都建立在前一章之上，名詞在第一次出現的那章解釋。</li>
+  <li><b>指令都在 repo 根目錄執行</b>，也就是 clone 下來、有 <code>package.json</code> 的那個資料夾。第 1 章的「第 0 步」會帶你 clone。</li>
+  <li><b>深色底、上方標著「▶ 貼上執行」的區塊是要你跑的指令</b>，標籤會寫在哪個目錄跑：</li>
+</ul>
+<pre class="shell" data-where="示意：這一格是要你貼上執行的指令"><code>npm test</code></pre>
+<ul>
+  <li><b>沒有標籤的區塊是實測輸出</b>，是作者當時真的跑出來的結果。你跑出來的時間、雜湊值、drone 狀態會不一樣，每章會說明哪些不同是正常的。</li>
+  <li><b>圖的顏色代表「誰在執行」</b>，全書固定：</li>
+</ul>
+<div class="legend">
+  <span><i style="background:var(--c-browser)"></i>瀏覽器</span>
+  <span><i style="background:var(--c-node)"></i>Node 上的開發工具（Vite、tsc、Vitest）</span>
+  <span><i style="background:var(--c-ext)"></i>外部服務（OSM 圖磚、後端、drone）</span>
+  <span><i style="background:var(--c-you)"></i>你在終端打的指令</span>
+</div>
+
+<h2>章節</h2>
+<ol class="toc">
+  <li>
+    <span class="num">STEP 1</span>
+    <a class="title" href="step01.html">骨架與空地圖：一個前端專案最小的樣子</a>
+    <p class="desc">npm、package.json、Vite dev server 與 proxy、TypeScript 型別檢查、第一個測試、直接量 drone 的腳本。打開網頁有一張置中在 SITL 起飛點的地圖。</p>
+  </li>
+  <li class="todo">
+    <span class="num">STEP 2</span>
+    <span class="title">地圖上顯示 drone 與側欄狀態（尚未撰寫）</span>
+    <p class="desc">每秒向後端要資料，把每台 drone 畫成一個點；離線、沒有 GPS、遙測過期時怎麼顯示。</p>
+  </li>
+  <li class="todo">
+    <span class="num">STEP 3</span>
+    <span class="title">起飛與降落按鈕（尚未撰寫）</span>
+    <p class="desc">從網頁送出指令、顯示 drone 的拒絕理由、追蹤任務直到結束。</p>
+  </li>
+</ol>
+
+</div>
+</body>
+</html>
