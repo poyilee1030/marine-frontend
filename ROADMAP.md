@@ -107,6 +107,8 @@
 2. **Definition of Done：**
    - 驗收證據貼在 PR 描述：指令輸出、截圖、`watch_drone.sh` 的紀錄。
    - 在 `docs/baseline.md` 最後面追加本 step 的一段。
+   - 教材一章 `docs/stepNN.html`（寫給不熟前端的讀者；程式驗證完才寫），更新 `docs/index.html` 與前一章的導覽，
+     開 PR 前交給冷讀掃過。之後動到教材引用的檔案時，同一個 PR 要同步那一章的節錄與數字。
    - ROADMAP 裡本 step 打勾。
 3. **合併前 self-review，發現項分流。** 本 step 範圍內的當場修並重驗；
    行為層級的改動排成後續 step。
@@ -211,6 +213,7 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
       `GET /get_drone_state`，印出 `時間 alt_rel is_armed flight_mode`，跑 `seconds×2` 次後結束
       （工作流程規則 6）。之後每個 step 驗收都用它量下游
 - [x] `docs/baseline.md`（append-only），第一段：各工具版本、`npm run build` 印出的大小
+- [x] 教材：`docs/index.html`（目錄）與 `docs/step01.html`（本 step 一章）——開 PR 後才補上，見 PR #1 討論
 - [x] `README.md`：
   - 進度照實寫
   - **名詞與檔案地圖**（寫給不熟前端的人）：`package.json`／`package-lock.json`／

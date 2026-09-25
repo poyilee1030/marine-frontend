@@ -72,6 +72,7 @@ scripts/watch_drone.sh http://172.18.10.2:7070 5   # 每 0.5 秒一行，5 秒�
 | `tsconfig.json` | TypeScript 設定，每個選項旁邊有中文註解。 |
 | `scripts/watch_drone.sh` | 驗收工具：直接向 drone 查狀態並印出來，用來確認「drone 真的起飛了」，而不是只看網頁。 |
 | `docs/baseline.md` | 每個 step 的量測數字與踩坑紀錄，只往後加、不改舊的。 |
+| `docs/index.html`、`docs/step01.html` | 教材：每個 step 一章，用瀏覽器直接打開檔案就能讀，從 `index.html` 開始。 |
 | `dist/` | `npm run build` 的產物，不進 git。 |
 
 ## 授權
