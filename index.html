@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>marine-frontend</title>
+    <style>
+      /* 地圖在左、側欄在右，兩者並排填滿整個視窗 */
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: flex;
+        font-family: sans-serif;
+      }
+      #map {
+        flex: 1;
+      }
+      #panel {
+        width: 320px;
+        padding: 12px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        border-left: 1px solid #ccc;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <aside id="panel">
+      <h2>Drones</h2>
+      <p>（step-2 會在這裡列出每台 drone 的狀態）</p>
+    </aside>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

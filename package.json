@@ -1,0 +1,23 @@
+{
+  "name": "marine-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "給 drone 容器開發者手動測試用的極簡網頁：一張地圖、幾個點、兩顆按鈕",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc --noEmit && vite build"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.22",
+    "typescript": "^6.0.3",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4"
+  }
+}

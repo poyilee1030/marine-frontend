@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    // 開啟所有嚴格檢查：例如可能是 null 的值沒處理就報錯。這是用 TypeScript 的主要目的。
+    "strict": true,
+    // tsc 只做型別檢查、不產出 .js；打包交給 Vite。
+    "noEmit": true,
+    // 程式碼用現代的 import/export 寫法。
+    "module": "esnext",
+    // 用「打包器」的規則找 import 的檔案（與 Vite 一致），import 不必寫副檔名。
+    "moduleResolution": "bundler",
+    // 可用的內建 API：瀏覽器（document、fetch…）加上 ES2022 的語言功能。
+    "lib": ["dom", "es2022"],
+    // 讓 TypeScript 認得 Vite 的額外功能，例如 import 一個 .css 檔。
+    "types": ["vite/client"]
+  },
+  // 只檢查瀏覽器端的程式碼。vite.config.ts 跑在 Node 上：放進來會連帶載入 Vite 的型別檔，
+  // 它引用了 Node 的型別（Buffer、node:http…），本專案沒有安裝，會冒出 40 個與本專案無關的錯誤。
+  "include": ["src"]
+}
