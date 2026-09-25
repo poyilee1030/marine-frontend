@@ -193,28 +193,31 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
 型別檢查、測試、打包三條指令都能跑。
 
 **內容**
-- [ ] 手寫最小骨架（**不用** `npm create vite` 的範本，免得留下計數器、logo 等樣板殘留）：
+- [x] 手寫最小骨架（**不用** `npm create vite` 的範本，免得留下計數器、logo 等樣板殘留）：
   - `index.html`：`<div id="map">`、`<aside id="panel">`，一段 inline CSS 讓兩者並排
   - `src/main.ts`：建立 Leaflet 地圖，中心 `25.0226887, 121.4872364`
     （marlin-drone `startup_sitl.sh` 的 `DEFAULT_LAT/LON`），zoom 17，OSM 圖磚
   - `vite.config.ts`：`server.proxy = { "/api": "http://localhost:8100" }`
   - `tsconfig.json`：`strict`、`noEmit`、`module: "esnext"`、`moduleResolution: "bundler"`、
     `lib: ["dom", "es2022"]`（只開這些，每個選項旁邊用註解說明用途）
-- [ ] `package.json` scripts：
+    ——實作時追加三項（見 `docs/baseline.md` step-1 踩坑 1）：`types: ["vite/client"]`
+    （讓 `import "*.css"` 有型別）、`skipLibCheck: true`（不檢查套件自帶的 `.d.ts`）、
+    `include: ["src"]`（`vite.config.ts` 不納入型別檢查，否則會拉進 Vite 的 Node 型別）
+- [x] `package.json` scripts：
   `dev`＝`vite`、`check`＝`tsc --noEmit`、`test`＝`vitest run`、
   `build`＝`tsc --noEmit && vite build`
-- [ ] `src/smoke.test.ts`：一個能跑的測試，證明 Vitest 管線通（step-2 有了 `view.test.ts` 後刪掉）
-- [ ] `scripts/watch_drone.sh <drone_url> <seconds>`：每 0.5 s 直接打 drone 的
+- [x] `src/smoke.test.ts`：一個能跑的測試，證明 Vitest 管線通（step-2 有了 `view.test.ts` 後刪掉）
+- [x] `scripts/watch_drone.sh <drone_url> <seconds>`：每 0.5 s 直接打 drone 的
       `GET /get_drone_state`，印出 `時間 alt_rel is_armed flight_mode`，跑 `seconds×2` 次後結束
       （工作流程規則 6）。之後每個 step 驗收都用它量下游
-- [ ] `docs/baseline.md`（append-only），第一段：各工具版本、`npm run build` 印出的大小
-- [ ] `README.md`：
+- [x] `docs/baseline.md`（append-only），第一段：各工具版本、`npm run build` 印出的大小
+- [x] `README.md`：
   - 進度照實寫
   - **名詞與檔案地圖**（寫給不熟前端的人）：`package.json`／`package-lock.json`／
     `node_modules` 各是什麼、`npm ci` 與 `npm install` 差在哪、Vite 做了什麼
     （dev server、proxy、打包）、`index.html` 與 `src/` 下每個檔案的角色、`dist/` 是什麼
-- [ ] `CLAUDE.md`（安裝、三條檢查指令、執行前置條件、PR 流程、指向「工作流程規則」與
-      「出問題時看哪裡」）、`.gitignore`（`node_modules/`、`dist/`）、`LICENSE`，
+- [x] `CLAUDE.md`（安裝、三條檢查指令、執行前置條件、PR 流程、指向「工作流程規則」與
+      「出問題時看哪裡」）、`.gitignore`（`node_modules/`、`dist/`）、`LICENSE`（MIT），
       以及與之一致的 `package.json` license 欄位
 
 **驗收**
@@ -285,7 +288,7 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
   起飛途中的情況要以實測為準，把實際結果記進 `docs/baseline.md`）
 - 剛降落、`is_ready_to_arm=false` 時按「起飛」：訊息區顯示的狀態碼與 `detail`
   和直接 `curl -X POST 172.18.10.2:7070/api/takeoff` 的結果相同
-- 以上各附 `watch_drone.sh` 紀錄片段與截圖；`watch_drone.sh` 結束後 `pgrep -f watch_drone` 查無殘留
+- 以上各附 `watch_drone.sh` 紀錄片段與截圖；`watch_drone.sh` 結束後 `pgrep -x watch_drone.sh` 查無殘留（不要用 `pgrep -f`：會比對到自己的 shell，見 `docs/baseline.md` step-1 踩坑 2）
 
 ---
 
