@@ -36,6 +36,7 @@ drone-1 的 API 在 `http://172.18.10.2:7070`。驗收量 drone 自己的 `GET /
 
 - 一個 step ＝ 一個 branch（`step-N-<短名>`）＝ 一個 PR，標題 `step-N: <一句話目標>`。
 - `src/view.ts` 的純函式**先寫測試、看它紅、再實作**（工作流程規則 11）。
+- 每個 step 的程式碼（不含測試、docs）不超過 800 行，超過就拆成 `step-N-a`、`step-N-b`（工作流程規則 12）；PR 描述貼上規則 12 量法指令的輸出。
 - 每個 step 在 `docs/baseline.md` 最後面追加一段（append-only），含踩坑；開工前先讀上一段。
 - PR 用 GitHub REST API 開（本機沒有 `gh`），token 取自 `git remote get-url origin`。
   remote URL 內嵌 PAT 是維護者的習慣，不要改動 remote。
