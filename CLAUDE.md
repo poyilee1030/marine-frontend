@@ -38,7 +38,7 @@ drone-1 的 API 在 `http://172.18.10.2:7070`。驗收量 drone 自己的 `GET /
 - `src/view.ts` 的純函式**先寫測試、看它紅、再實作**（工作流程規則 11）。
 - 每個 step 的程式碼（不含測試、docs）不超過 800 行，超過就拆成 `step-N-a`、`step-N-b`（工作流程規則 12）；PR 描述貼上規則 12 量法指令的輸出。
 - 每個 step 在 `docs/baseline.md` 最後面追加一段（append-only），含踩坑；開工前先讀上一段。
-- PR 用 GitHub REST API 開（本機沒有 `gh`），token 取自 `git remote get-url origin`。
+- PR 用 GitHub REST API 開（本機沒有 `gh`），token 取自 `git remote get-url origin`。PR 標題與描述用繁體中文（工作流程規則 1）。
   remote URL 內嵌 PAT 是維護者的習慣，不要改動 remote。
 - 每個 step 附一章教材 `docs/stepNN.html`（`incremental-html-textbook` skill；程式驗證完才寫），並更新 `docs/index.html`、前一章的 next 導覽；開 PR 前交給 `cold-read`（工作流程規則 2）。
 - 教材快照同步：改到教材有引用的檔案時，`grep -l '<檔名或函式名>' docs/*.html` 找出引用它的章，核對節錄、輸出與數字。review 時「動到被引用的檔案、docs 卻沒動」就是一個 finding。

@@ -132,6 +132,8 @@
 
 1. **一個 Step ＝ 一個 PR ＝ 一個 branch。** branch 名 `step-N-<短名>`，
    PR 標題 `step-N: <一句話目標>`。拆開的 step 用 `step-N-a-<短名>`、PR 標題 `step-N-a: …`（見規則 12）。
+   **PR 標題與描述一律用繁體中文**：維護者讀中文最快。程式碼、指令、檔名、識別字（如 `step-N`）、
+   以及貼上的指令輸出維持原文，不翻譯。
 2. **Definition of Done：**
    - 驗收證據貼在 PR 描述：指令輸出、截圖、`watch_drone.sh` 的紀錄。
    - PR 描述貼上本 step 的程式碼行數（規則 12 的量法指令輸出）。
