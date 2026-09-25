@@ -13,7 +13,7 @@
     // 讓 TypeScript 認得 Vite 的額外功能，例如 import 一個 .css 檔。
     "types": ["vite/client"]
   },
-  // 只檢查瀏覽器端的程式碼。vite.config.ts 跑在 Node 上：放進來會連帶載入 Vite 的
-  // Node 端型別（Buffer、node:http…），而上面的 lib 只有 dom，會冒出 40 個與本專案無關的錯誤。
+  // 只檢查瀏覽器端的程式碼。vite.config.ts 跑在 Node 上：放進來會連帶載入 Vite 的型別檔，
+  // 它引用了 Node 的型別（Buffer、node:http…），本專案沒有安裝，會冒出 40 個與本專案無關的錯誤。
   "include": ["src"]
 }

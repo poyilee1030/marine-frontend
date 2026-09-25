@@ -39,9 +39,11 @@ drone-1 的 API 在 `http://172.18.10.2:7070`。驗收量 drone 自己的 `GET /
 - 每個 step 在 `docs/baseline.md` 最後面追加一段（append-only），含踩坑；開工前先讀上一段。
 - PR 用 GitHub REST API 開（本機沒有 `gh`），token 取自 `git remote get-url origin`。
   remote URL 內嵌 PAT 是維護者的習慣，不要改動 remote。
+- 每個 step 附一章教材 `docs/stepNN.html`（`incremental-html-textbook` skill；程式驗證完才寫），並更新 `docs/index.html`、前一章的 next 導覽；開 PR 前交給 `cold-read`（工作流程規則 2）。
+- 教材快照同步：改到教材有引用的檔案時，`grep -l '<檔名或函式名>' docs/*.html` 找出引用它的章，核對節錄、輸出與數字。review 時「動到被引用的檔案、docs 卻沒動」就是一個 finding。
 - 其餘規則：ROADMAP「工作流程規則」；出問題時：ROADMAP「出問題時看哪裡」。
 
 ## 已知的坑（細節見 docs/baseline.md）
 
-- 查殘留程序不要用 `pgrep -f <字串>`：會比對到呼叫它的 shell 自己。用 `pgrep -x <程序名>` 或 `ps -eo pid,cmd | grep '[v]ite'`。
-- `tsconfig.json` 的 `include` 只放 `src`；把 `vite.config.ts` 放進去會拉進 Vite 的 Node 型別而報一堆錯。
+- 查殘留程序不要用 `pgrep -f <字串>`，也不要用 `ps … | grep '[v]ite'`：兩者都會比對到呼叫它的 shell 自己的指令列（`[v]` 只擋得住 grep 本身，擋不住指令裡其他地方的 vite 字樣）。用程序名稱：`pgrep -x watch_drone.sh`；查 vite 用 `for p in $(pgrep -x node); do tr '\0' ' ' < /proc/$p/cmdline; echo; done | grep vite`。
+- `tsconfig.json` 的 `include` 只放 `src`；把 `vite.config.ts` 放進去會拉進 Vite 的型別檔（它要 Node 的型別，本專案沒裝），報 40 個錯。
