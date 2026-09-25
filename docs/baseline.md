@@ -55,10 +55,12 @@ JS 幾乎全是 Leaflet 本身；CSS 是 `leaflet/dist/leaflet.css`。
 
 ### 踩坑
 
-1. **`tsc` 報出 40 幾個 `node_modules/vite/...` 的錯誤**（`Cannot find name 'Buffer'`、`node:http` 等）。
+1. **`tsc` 報出 40 個 `node_modules/vite/...` 的錯誤**（`Cannot find name 'Buffer'`、`node:http` 等）。
    原本以為把 `vite.config.ts` 放進 `include` 讓它也被型別檢查比較周全；實際上它會把 Vite 的
    Node 端型別一起拉進來，而本專案 `lib` 只有 `dom`。
-   修法：`include` 只放 `src`，並開 `skipLibCheck`（Vite 官方範本也開）。
+   修法：`include` 只放 `src`。（一度同時開了 `skipLibCheck`；事後在全新 clone 上分開測：
+   只改 `include` → 0 個錯誤；只開 `skipLibCheck` 也是 0 個，但那只是把套件型別檔的錯誤藏起來。
+   所以只保留 `include` 這一項，`tsconfig` 少一個選項。）
    用「故意在 `src/main.ts` 放一個型別錯誤」確認 `tsc` 仍會抓到 `src/` 的錯誤。
 2. **`pgrep -f watch_drone` 在腳本已結束後仍回報 1 個程序。** 原本以為 `-f` 比對全指令列最保險；
    實際上它比對到的是「呼叫 pgrep 的那個 shell」，因為那個 shell 的指令列本身就含有 `watch_drone` 字樣。

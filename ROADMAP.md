@@ -200,9 +200,9 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
   - `vite.config.ts`：`server.proxy = { "/api": "http://localhost:8100" }`
   - `tsconfig.json`：`strict`、`noEmit`、`module: "esnext"`、`moduleResolution: "bundler"`、
     `lib: ["dom", "es2022"]`（只開這些，每個選項旁邊用註解說明用途）
-    ——實作時追加三項（見 `docs/baseline.md` step-1 踩坑 1）：`types: ["vite/client"]`
-    （讓 `import "*.css"` 有型別）、`skipLibCheck: true`（不檢查套件自帶的 `.d.ts`）、
-    `include: ["src"]`（`vite.config.ts` 不納入型別檢查，否則會拉進 Vite 的 Node 型別）
+    ——實作時追加兩項（見 `docs/baseline.md` step-1 踩坑 1）：`types: ["vite/client"]`
+    （讓 `import "*.css"` 有型別）、`include: ["src"]`（`vite.config.ts` 不納入型別檢查，
+    否則會拉進 Vite 的 Node 型別）
 - [x] `package.json` scripts：
   `dev`＝`vite`、`check`＝`tsc --noEmit`、`test`＝`vitest run`、
   `build`＝`tsc --noEmit && vite build`
