@@ -129,6 +129,19 @@
     - 非同步一律 `async`/`await`，不用 `.then()` 鏈。
     - 不引入 ROADMAP 沒列的套件；要加先改 ROADMAP 的基準表與選型決策。
     - 註解用中文，寫「為什麼這樣做」，不寫「這行在做什麼」。
+11. **先寫測試，再寫程式。** 適用於 `src/view.ts` 裡的每個純函式，順序固定：
+    1. **寫測試**：在 `src/view.test.ts` 寫出案例（給這個輸入 → 應該得到這個輸出）。
+       函式本身先只寫空殼——型別正確、內容是 `throw new Error("未實作")`——讓 `npm run check` 能過。
+    2. **看它失敗**：跑 `npm test`，確認新測試是紅的。沒看過它失敗，就不能確定它真的有在測。
+    3. **寫實作**：改到 `npm test` 全綠為止；過程中不改測試的預期值，除非發現是測試寫錯
+       （要在 commit 訊息說明）。
+    4. **修 bug 也一樣**：先寫一個能重現這個 bug 的失敗測試，再修。
+    - **Commit 順序**：「測試＋空殼」一個 commit，「實作」下一個 commit；
+      PR 描述貼上第 2 步的失敗輸出，當作「先寫測試」的證據。
+    - **不寫單元測試的部分**：`src/main.ts`（直接操作 DOM 與 Leaflet）和 `src/api.ts`
+      （只是薄薄一層 `fetch`；不 mock `fetch`，那是新手不需要的花招）。
+      這兩處改用驗收條件驗證（截圖＋`watch_drone.sh`）。
+      也因此，能抽成純函式的判斷邏輯一律搬進 `view.ts`（規則 7），才吃得到測試。
 
 ---
 
@@ -218,16 +231,17 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
 側欄列出每台的狀態。
 
 **內容**
+（依工作流程規則 11，下列順序就是實作順序）
 - [ ] `src/api.ts`：`DroneStatus` 型別（對應後端 step-2 的回應）、`fetchDrones()`
-- [ ] `src/view.ts`（純函式，不碰 DOM／Leaflet）：
+- [ ] **先寫** `src/view.test.ts`，並確認它失敗：正常、離線、無 fix、(0,0)、遙測過期、
+      armed／disarmed 顏色；刪掉 step-1 的 `src/smoke.test.ts`
+- [ ] 再寫 `src/view.ts`（純函式，不碰 DOM／Leaflet），直到測試全綠：
       `toView(d: DroneStatus) → { show, lat, lng, color, label }`
   - `show=false`：`online=false`，或 `gps_fix_type < 3`，或 `lat==0 && lng==0`（F-G1、F-G2）
   - `color`：灰＝離線或 `telemetry_age_s > 3`（F-G3）；綠＝armed；藍＝disarmed
 - [ ] `src/main.ts`：以 `setTimeout` 串接每 1 s 輪詢；依 `name` 建立／更新／移除
       `L.circleMarker`；側欄每台一列：名稱、`flight_mode_name`、`alt_rel`（小數 1 位）、
       armed、`battery_voltage`、遙測年齡；請求失敗時側欄頂端顯示「後端連不上」
-- [ ] `src/view.test.ts`：正常、離線、無 fix、(0,0)、遙測過期、armed／disarmed 顏色；
-      刪掉 step-1 的 `src/smoke.test.ts`
 
 **驗收**
 - `npm run check && npm test && npm run build` 通過
@@ -244,12 +258,15 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
 **目標：** 在畫面上讓選中的 drone 起飛、降落，每個指令的結果——包括 drone 的拒絕理由——
 都看得到。
 
-**內容**
+**內容**（依工作流程規則 11，先做前兩項）
+- [ ] **先寫** `src/view.test.ts` 的新案例，並確認它失敗：`formatDetail` 三種形狀
+      （字串、422 陣列單筆與多筆、其他）、task 終態判斷
+- [ ] 再寫 `src/view.ts`，直到測試全綠：`formatDetail(detail: unknown) → string`
+      （F-G7：字串／422 陣列／其他）、`isTerminal(state) → boolean`
 - [ ] 選取：點地圖上的點或側欄的列 → 成為「目前 drone」，側欄反白
 - [ ] 高度輸入框（`type=number`，min 1、max 500、預設 10）、`[起飛]`、`[降落]` 按鈕
 - [ ] `src/api.ts`：`takeoff(name, altitude)`、`land(name)`、`getTask(name, taskId)`；
       非 2xx 時丟出帶 `status` 與 `detail` 的錯誤
-- [ ] `src/view.ts`：`formatDetail(detail: unknown) → string`（F-G7：字串／422 陣列／其他）
 - [ ] 訊息區（往下累加的純文字清單，每筆有時間）：
   - 送出：`14:03:07 drone-1 TAKEOFF 10 m → 已派發 task_id=ab12…`
   - 失敗：`14:03:07 drone-1 TAKEOFF → HTTP 409: <drone 的 detail>`（F-G6）
@@ -257,7 +274,6 @@ cd ~/GitHubPoyi/marine-frontend && npm run dev     # http://localhost:5173
   - 結果：每 1 s 輪詢 `/tasks/{id}`，直到 state 進入終態
     （succeeded／failed／rejected／superseded），寫一筆 `task ab12… → succeeded`（F-G4）
 - [ ] 按鈕只在 HTTP 請求進行中 disable；task 還在 running 時**降落照樣能按**（F-G5）
-- [ ] `src/view.test.ts`：`formatDetail` 三種形狀（字串、422 陣列單筆與多筆、其他）、task 終態判斷
 
 **驗收**（全部在 SITL drone-1 上，另開終端跑 `scripts/watch_drone.sh http://172.18.10.2:7070 300`）
 - 按「起飛」(10 m)：`watch_drone.sh` 紀錄出現 `alt_rel ≥ 9.5` 且 `is_armed=true`；
