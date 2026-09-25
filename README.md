@@ -35,7 +35,7 @@ npm run build     # 打包（會先再做一次型別檢查）
 直接看 drone 的實際狀態（不經過網頁）：
 
 ```bash
-scripts/watch_drone.sh http://172.18.10.2:7070 5   # 每 0.5 秒一行，5 秒後結束
+scripts/watch_drone.sh http://172.18.10.2:7070 5   # 每 0.5 秒一行、共 10 行；drone 正常回應時約 5 秒
 ```
 
 出問題時先看 ROADMAP 的「出問題時看哪裡」一節。

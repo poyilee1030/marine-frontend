@@ -92,3 +92,18 @@ JS 幾乎全是 Leaflet 本身；CSS 是 `leaflet/dist/leaflet.css`。
   沒改的：`audited 51` 的 51 無法從 lock 檔推得（lock 有 74 筆）所以不解釋、`Object.is equality`、
   bash 的 `[[ =~ ]]`／`for ((…))`（註解已足夠猜出用途）。
 - 兩張手繪 SVG 以 headless Chrome 在強制淺色／強制深色兩份副本下截圖檢查過；未在真人瀏覽器上看過。
+
+### code review（PR #1，/code-review medium）後的修正：`scripts/watch_drone.sh`
+
+reviewer 回報 3 項，全部實跑回核（修正前的重現即紅燈證據）：
+
+| # | 問題 | 修正前（實測） | 修正後（實測） |
+|---|---|---|---|
+| 1 | 秒數開頭是 0 被當八進位 | `08` → `value too great for base`、`count: unbound variable`、exit 1；`010` → 只記 16 行 | 參數檢查改 `^[1-9][0-9]*$`：`08`／`010`／`0` 都印用法、exit 2 |
+| 2 | jq 失敗不會被發現（`$(… \| jq …)` 是 `echo` 的參數，`set -e` 管不到） | drone 回 200＋HTML → 每行只有時間、stderr 有 `parse error`、exit 0；沒裝 jq → `jq: command not found`、空白行、exit 0 | jq 放進 `elif` 條件：HTML → 每行「回應不是預期的 JSON」；開頭先檢查 jq，沒裝 → exit 2 |
+| 3 | 開頭註解寫「跑 `<seconds>` 秒」，實際是固定 `秒數×2` 次 | 5 秒參數：正常 5.19 s、被拒 5.06 s、位址不存在 9.07 s | 迴圈不變（ROADMAP 規格就是固定次數），註解改寫清楚；三種情況耗時重測：5.19／5.06／9.07 s，不回歸 |
+
+- #3 reviewer 另外推論「拿 log 時間對截圖會越對越偏」——不成立：每行印的是查詢當下的實際時間，不是推算值；
+  且只有 drone 不回應時才會變慢，那時每行都是「連不上」，沒有資料可對。
+- 教材 `docs/step01.html` 原本寫「`set -euo pipefail`：任何指令失敗就停」，在 jq 那行不成立，已改寫並加兩格常見錯誤；
+  「驗證」一節的 watch_drone 輸出換成修正後腳本的實測。

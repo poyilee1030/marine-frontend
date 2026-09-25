@@ -667,11 +667,16 @@ AssertionError: expected 3 to be 4 // Object.is equality
 所以驗收時要<b class="hl-key">直接問 drone</b>：這支腳本每 0.5 秒向 drone 的 <code>GET /get_drone_state</code> 要一次狀態，印成一行。</p>
 
 <figure class="listing">
-<figcaption>scripts/watch_drone.sh（節錄 8–29 行）</figcaption>
-<pre class="sh" data-hot="16"><code>set -euo pipefail
+<figcaption>scripts/watch_drone.sh（節錄 10–39 行）</figcaption>
+<pre class="sh" data-hot="22,24"><code>set -euo pipefail
 
-if [ $# -ne 2 ] || ! [[ "$2" =~ ^[0-9]+$ ]]; then
+# 秒數只收 1 以上、開頭不是 0 的整數：bash 會把 08、010 這種開頭是 0 的數字當成八進位。
+if [ $# -ne 2 ] || ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
   echo "用法：$0 &lt;drone_url&gt; &lt;seconds&gt;   例：$0 http://172.18.10.2:7070 5" &gt;&amp;2
+  exit 2
+fi
+if ! command -v jq &gt;/dev/null; then
+  echo "需要 jq（Ubuntu：sudo apt install jq）" &gt;&amp;2
   exit 2
 fi
 
@@ -682,24 +687,33 @@ echo "時間 alt_rel is_armed flight_mode"
 for (( i = 0; i &lt; count; i++ )); do
   now=$(date +%H:%M:%S.%3N)
   # --max-time：drone 沒回應時最多等 0.4 秒，保證迴圈不會卡住。
-  # 單次失敗不中止整段紀錄，印一行「連不上」繼續量。
-  if json=$(curl -sf --max-time 0.4 "$drone_url/get_drone_state"); then
-    echo "$now $(echo "$json" | jq -r '"\(.alt_rel) \(.is_armed) \(.flight_mode)"')"
-  else
+  # 單次失敗不中止整段紀錄，印一行說明原因，繼續量。
+  # jq 放在自己的 if 裡：寫成 echo 的參數 $(... | jq ...) 的話，jq 失敗 bash 也不會發現。
+  if ! json=$(curl -sf --max-time 0.4 "$drone_url/get_drone_state"); then
     echo "$now 連不上 $drone_url"
+  elif ! fields=$(echo "$json" | jq -r '"\(.alt_rel) \(.is_armed) \(.flight_mode)"' 2&gt;/dev/null); then
+    echo "$now 回應不是預期的 JSON"
+  else
+    echo "$now $fields"
   fi
   sleep 0.5
 done</code></pre>
 </figure>
 
 <ul>
-  <li><b><code>set -euo pipefail</code></b>：任何指令失敗就停、用到沒設定的變數就停、管線中任一段失敗都算失敗。避免腳本出錯後還繼續跑。</li>
-  <li><b>開頭的參數檢查</b>：<code>$#</code> 是參數個數，不是 2 個就印用法並以結束碼 2 離開。
+  <li><b><code>set -euo pipefail</code></b>：指令失敗就停、用到沒設定的變數就停、管線中任一段失敗都算失敗。
+  但它<b class="hl-bad">有管不到的地方</b>：寫在另一個指令參數裡的 <code>$(…)</code> 失敗了，bash 只看外層那個指令有沒有成功。
+  這支腳本原本寫成 <code>echo "$now $(… | jq …)"</code>，PR #1 的 code review 實測發現 jq 失敗時腳本照樣印出空白的資料行、以成功結束。
+  所以現在 jq 放在自己的 <code>elif</code> 裡（見下一點）。</li>
+  <li><b>開頭的檢查</b>：<code>$#</code> 是參數個數，不是 2 個就印用法並以結束碼 2 離開。秒數只收 <code>^[1-9][0-9]*$</code>，
+  也就是 1 以上、開頭不是 0 的整數：bash 的算術會把 <code>08</code>、<code>010</code> 這種數字當成八進位
+  （code review 抓到的：傳 <code>08</code> 會直接出錯，傳 <code>010</code> 只跑 8 秒）。沒裝 <code>jq</code> 也在這裡就停下。
   <code>${1%/}</code> 是第一個參數去掉結尾的 <code>/</code>，所以網址寫成 <code>…:7070/</code> 也沒關係。</li>
   <li><b>迴圈跑固定次數</b>（<code>秒數 × 2</code>），所以它<b>一定會自己結束</b>，不需要按 <kbd>Ctrl</kbd>+<kbd>C</kbd>，也不會留在背景。</li>
-  <li><b>強調的那行</b>：<code>curl -s</code> 不印進度條，<code>-f</code> 讓 HTTP 錯誤碼也算失敗，<code>--max-time 0.4</code> 最多等 0.4 秒。
-  寫在 <code>if</code> 裡面，所以單次失敗只會印一行「連不上」，不會觸發 <code>set -e</code> 讓整支腳本中止。</li>
-  <li><b><code>jq -r</code></b>：從 drone 回傳的 JSON 挑出三個欄位。<code>flight_mode</code> 是飛控的模式編號，例如 20 是 QLAND（降落）。</li>
+  <li><b>強調的第一行</b>：<code>curl -s</code> 不印進度條，<code>-f</code> 讓 HTTP 錯誤碼也算失敗，<code>--max-time 0.4</code> 最多等 0.4 秒。
+  寫在 <code>if</code> 的條件裡，所以單次失敗只會印一行「連不上」，不會觸發 <code>set -e</code> 讓整支腳本中止。</li>
+  <li><b>強調的第二行</b>：<code>jq -r</code> 從 drone 回傳的 JSON 挑出三個欄位。它也寫在條件裡，解析失敗（例如收到一頁 HTML 錯誤頁）
+  就印一行「回應不是預期的 JSON」，而不是印出看起來像資料的空白行。<code>flight_mode</code> 是飛控的模式編號，例如 20 是 QLAND（降落）。</li>
 </ul>
 
 <div class="lab">
@@ -709,7 +723,7 @@ done</code></pre>
 echo "exit=$?"
 pgrep -x watch_drone.sh || echo 無殘留</code></pre>
   <p>約 5 秒後自己結束，接著印出 <code>exit=0</code> 和 <code>無殘留</code>。輸出的逐行解讀在本章的「驗證」一節。</p>
-  <p>連不上 drone 時每行印 <code>連不上 &lt;網址&gt;</code>，耗時看「怎麼連不上」：主機在、但那個 port 沒有服務，會立刻被拒絕，
+  <p>迴圈固定跑 <code>秒數 × 2</code> 次，所以「約 5 秒」只在 drone 正常回應時成立。連不上 drone 時每行印 <code>連不上 &lt;網址&gt;</code>，耗時看「怎麼連不上」：主機在、但那個 port 沒有服務，會立刻被拒絕，
   實測 5.06 秒結束；位址根本不存在，每次都要等滿 0.4 秒逾時，實測 9.07 秒結束。兩者都會自己結束，結束碼都是 0。</p>
 </div>
 
@@ -812,20 +826,20 @@ dist/assets/index-BvjQebgt.js   150.17 kB │ gzip: 44.05 kB «5»</pre>
 <h3>watch_drone.sh：10 行後自己結束</h3>
 
 <pre>時間 alt_rel is_armed flight_mode «1»
-19:22:24.192 -0.132 false 20 «2»
-19:22:24.710 -0.146 false 20
-19:22:25.229 -0.161 false 20
-19:22:25.748 -0.178 false 20
-19:22:26.267 -0.191 false 20
-19:22:26.786 -0.196 false 20
-19:22:27.305 -0.031 false 20
-19:22:27.824 0 false 20
-19:22:28.343 0.004 false 20
-19:22:28.862 0.006 false 20 «3»</pre>
+20:20:11.167 0.114 false 20 «2»
+20:20:11.686 0.092 false 20
+20:20:12.205 0.015 false 20
+20:20:12.723 0.005 false 20
+20:20:13.242 0.003 false 20
+20:20:13.761 0.004 false 20
+20:20:14.281 0 false 20
+20:20:14.800 0.003 false 20
+20:20:15.319 0.01 false 20
+20:20:15.838 0.016 false 20 «3»</pre>
 
 <ol class="notes">
   <li><span class="mk">1</span>欄位標題。<code>ROADMAP.md</code> 的 step-3 驗收寫的是「起飛 10 m 後 <code>alt_rel ≥ 9.5</code>」，看的就是這一欄。</li>
-  <li><span class="mk">2</span>drone 停在地上：<code>is_armed=false</code>，<code>alt_rel</code> 在 0 附近小幅飄動（這 10 行介於 −0.196 和 0.006 之間）。
+  <li><span class="mk">2</span>drone 停在地上：<code>is_armed=false</code>，<code>alt_rel</code> 在 0 附近小幅飄動（這 10 行介於 0 和 0.114 之間）。
   <code>flight_mode=20</code> 是 QLAND，代表它剛降落完，這是當時 drone 的真實狀態，不是這個專案造成的。</li>
   <li><span class="mk">3</span><b class="hl-ok">剛好 10 行、約 5.2 秒後自己結束</b>，結束碼 0。每行間隔約 0.52 秒：0.5 秒的 <code>sleep</code> 加上一次 curl 的時間。
   結束後 <code>pgrep -x watch_drone.sh</code> 什麼都找不到，確認沒有殘留。</li>
@@ -854,7 +868,7 @@ PR #1 附的截圖存在 repo 的 <code>docs/screenshots/step-1-map.png</code>�
 
 <h2 id="sec-pit">常見錯誤</h2>
 
-<p>前四格是這一步開發時<b>實際踩到</b>的；後兩格是設計上刻意避開的，標了來源。</p>
+<p>前六格是這一步開發時<b>實際踩到</b>的（最後兩格是 PR 開出後 code review 抓到的）；後兩格是設計上刻意避開的，標了來源。</p>
 
 <div class="pitgrid">
   <div class="pit">
@@ -887,6 +901,22 @@ PR #1 附的截圖存在 repo 的 <code>docs/screenshots/step-1-map.png</code>�
       <dt>症狀</dt><dd>在背景啟動的 dev server 沒收掉。之後再 <code>npm run dev</code>，終端印出 <code>Port 5173 is in use, trying another one...</code>，新的 server 跑在 <code>:5174</code>。</dd>
       <dt>後果</dt><dd>瀏覽器還開著 <code>:5173</code>，看到的是<b class="hl-bad">舊的那個 server</b>，可能還是另一個資料夾的程式。改了程式碼卻看不到效果。</dd>
       <dt>正解</dt><dd class="fix">在前景跑 <code>npm run dev</code>、用 <kbd>Ctrl</kbd>+<kbd>C</kbd> 停；並留意終端印出的 <code>Local:</code> 網址是不是 5173。</dd>
+    </dl>
+  </div>
+  <div class="pit">
+    <h4>jq 失敗了，腳本卻說成功<span class="tag">code review</span></h4>
+    <dl>
+      <dt>症狀</dt><dd>drone 回了一頁 HTML，或機器沒裝 jq：每行只有時間、後面空白，結束碼 0。</dd>
+      <dt>後果</dt><dd>驗收紀錄裡的空白行看起來像正常資料，沒有人會發現。</dd>
+      <dt>正解</dt><dd class="fix">別把可能失敗的指令藏在另一個指令的參數 <code>$(…)</code> 裡；放進 <code>if</code> 條件，失敗就印出原因。<code>set -e</code> 不是萬能的。</dd>
+    </dl>
+  </div>
+  <div class="pit">
+    <h4>秒數寫 08，腳本直接出錯<span class="tag">code review</span></h4>
+    <dl>
+      <dt>症狀</dt><dd><code>value too great for base (error token is "08")</code>；寫 <code>010</code> 則沒錯誤、但只跑 8 秒。</dd>
+      <dt>後果</dt><dd>bash 算術把開頭是 0 的數字當成八進位。</dd>
+      <dt>正解</dt><dd class="fix">參數檢查只收 <code>^[1-9][0-9]*$</code>，開頭是 0 的直接印用法。</dd>
     </dl>
   </div>
   <div class="pit">
